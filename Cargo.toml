@@ -2,7 +2,6 @@
 name = "inference"
 version = "0.3.0"
 edition = "2021"
-authors = ["Colin Dablain"]
 description = "A crate for managing the machine learning inference process"
 readme = "README.md"
 repository = "https://github.com/opensensordotdev/inference"
