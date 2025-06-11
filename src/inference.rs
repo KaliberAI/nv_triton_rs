@@ -12,7 +12,7 @@ pub struct ModelRateLimiter {
     /// @@
     /// @@     The resources required to execute the request on a model instance.
     /// @@     Resources are just names with a corresponding count. The execution
-    /// @@     of the instance will be blocked until the specificied resources are
+    /// @@     of the instance will be blocked until the specified resources are
     /// @@     available. By default an instance uses no rate-limiter resources.
     /// @@
     #[prost(message, repeated, tag = "1")]
@@ -107,7 +107,7 @@ pub struct ModelInstanceGroup {
     /// @@
     /// @@     GPU(s) where instances should be available. For each GPU listed,
     /// @@     'count' instances of the model will be available. Setting 'gpus'
-    /// @@     to empty (or not specifying at all) is eqivalent to listing all
+    /// @@     to empty (or not specifying at all) is equivalent to listing all
     /// @@     available GPUs.
     /// @@
     #[prost(int32, repeated, tag = "3")]
@@ -474,7 +474,7 @@ pub struct ModelOutput {
     /// @@  .. cpp:var:: ModelTensorReshape reshape
     /// @@
     /// @@     The shape produced for this output by the backend. The output will
-    /// @@     be reshaped from this to the shape specifed in 'dims' before being
+    /// @@     be reshaped from this to the shape specified in 'dims' before being
     /// @@     returned in the inference response. The reshape must have the same
     /// @@     number of elements as the output shape specified by 'dims'. Optional.
     /// @@
@@ -871,7 +871,7 @@ pub struct ModelOptimizationPolicy {
     /// @@     device has direct access to the source buffer and the destination
     /// @@     buffer. In such case, the gather kernel will be used only if the
     /// @@     number of buffers to be gathered is greater or equal to
-    /// @@     the specifed value. If 0, the gather kernel will be disabled.
+    /// @@     the specified value. If 0, the gather kernel will be disabled.
     /// @@     Default value is 0.
     /// @@     Currently only recognized by TensorRT backend.
     /// @@
@@ -1139,7 +1139,7 @@ pub mod model_optimization_policy {
             pub name: ::prost::alloc::string::String,
             /// @@    .. cpp:var:: map<string, string> parameters
             /// @@
-            /// @@       Additional paremeters used to configure the accelerator.
+            /// @@       Additional parameters used to configure the accelerator.
             /// @@
             #[prost(map = "string, string", tag = "2")]
             pub parameters: ::std::collections::HashMap<
@@ -1370,7 +1370,7 @@ pub struct ModelDynamicBatching {
     /// @@
     #[prost(bool, tag = "3")]
     pub preserve_ordering: bool,
-    /// @@  .. cpp:var:: uint32 priority_levels
+    /// @@  .. cpp:var:: uint64 priority_levels
     /// @@
     /// @@     The number of priority levels to be enabled for the model,
     /// @@     the priority level starts from 1 and 1 is the highest priority.
@@ -1379,15 +1379,15 @@ pub struct ModelDynamicBatching {
     /// @@     priority 3, etc. Requests with the same priority level will be
     /// @@     handled in the order that they are received.
     /// @@
-    #[prost(uint32, tag = "4")]
-    pub priority_levels: u32,
-    /// @@  .. cpp:var:: uint32 default_priority_level
+    #[prost(uint64, tag = "4")]
+    pub priority_levels: u64,
+    /// @@  .. cpp:var:: uint64 default_priority_level
     /// @@
     /// @@     The priority level used for requests that don't specify their
     /// @@     priority. The value must be in the range [ 1, 'priority_levels' ].
     /// @@
-    #[prost(uint32, tag = "5")]
-    pub default_priority_level: u32,
+    #[prost(uint64, tag = "5")]
+    pub default_priority_level: u64,
     /// @@  .. cpp:var:: ModelQueuePolicy default_queue_policy
     /// @@
     /// @@     The default queue policy used for requests that don't require
@@ -1397,14 +1397,14 @@ pub struct ModelDynamicBatching {
     /// @@
     #[prost(message, optional, tag = "6")]
     pub default_queue_policy: ::core::option::Option<ModelQueuePolicy>,
-    /// @@  .. cpp:var:: map<uint32, ModelQueuePolicy> priority_queue_policy
+    /// @@  .. cpp:var:: map<uint64, ModelQueuePolicy> priority_queue_policy
     /// @@
     /// @@     Specify the queue policy for the priority level. The default queue
     /// @@     policy will be used if a priority level doesn't specify a queue
     /// @@     policy.
     /// @@
-    #[prost(map = "uint32, message", tag = "7")]
-    pub priority_queue_policy: ::std::collections::HashMap<u32, ModelQueuePolicy>,
+    #[prost(map = "uint64, message", tag = "7")]
+    pub priority_queue_policy: ::std::collections::HashMap<u64, ModelQueuePolicy>,
 }
 /// @@
 /// @@.. cpp:var:: message ModelSequenceBatching
@@ -1447,6 +1447,16 @@ pub struct ModelSequenceBatching {
     /// @@
     #[prost(message, repeated, tag = "5")]
     pub state: ::prost::alloc::vec::Vec<model_sequence_batching::State>,
+    /// @@  .. cpp:var:: bool iterative_sequence
+    /// @@
+    /// @@     Requests for iterative sequences are processed over a number
+    /// @@     of iterations. An iterative sequence is initiated by a single
+    /// @@     request and is "rescheduled" by the model until completion.
+    /// @@     Requests for inflight requests will be batched together
+    /// @@     and can complete independently. Note this feature
+    /// @@     requires backend support. Default value is false.
+    #[prost(bool, tag = "6")]
+    pub iterative_sequence: bool,
     /// @@  .. cpp:var:: oneof strategy_choice
     /// @@
     /// @@     The strategy used by the sequence batcher. Default strategy
@@ -1711,6 +1721,40 @@ pub mod model_sequence_batching {
         /// @@
         #[prost(message, repeated, tag = "5")]
         pub initial_state: ::prost::alloc::vec::Vec<InitialState>,
+        /// @@  .. cpp:var:: bool use_same_buffer_for_input_output
+        /// @@
+        /// @@     The optional field to use a single buffer for both input and output
+        /// @@     state. Without this option, Triton allocates separate buffers
+        /// @@     for input and output state
+        /// @@     which can be problematic if the state size is
+        /// @@     large. This option reduces the memory usage by allocating a single
+        /// @@     buffer. Enabling this option is recommended whenever
+        /// @@     the input state is processed before the output state is written.
+        /// @@     When enabled the state
+        /// @@     will always be updated independent of whether
+        /// @@     TRITONBACKEND_StateUpdate is called
+        /// @@     (however TRITONBACKEND_StateUpdate should still be called for
+        /// @@     completeness).
+        /// @@
+        /// @@     The default value is false.
+        /// @@
+        #[prost(bool, tag = "6")]
+        pub use_same_buffer_for_input_output: bool,
+        /// @@  .. cpp:var:: bool use_growable_memory
+        /// @@
+        /// @@     The optional field to enable an implicit state buffer to grow
+        /// @@     without reallocating or copying existing memory.
+        /// @@     Additional memory will be appended to the end of the buffer and
+        /// @@     existing data will be preserved.
+        /// @@     This option is only available for CUDA memory and requires enabling
+        /// @@     use_same_buffer_for_input_output. When using this option,
+        /// @@     StateBuffer call will always return CUDA memory even if CPU memory
+        /// @@     is requested.
+        /// @@
+        /// @@     The default value is false.
+        /// @@
+        #[prost(bool, tag = "7")]
+        pub use_growable_memory: bool,
     }
     /// @@  .. cpp:var:: message StrategyDirect
     /// @@
@@ -1764,7 +1808,7 @@ pub mod model_sequence_batching {
         /// @@    .. cpp:var:: int32 max_candidate_sequences
         /// @@
         /// @@       Maximum number of candidate sequences that the batcher
-        /// @@       maintains. Excess seqences are kept in an ordered backlog
+        /// @@       maintains. Excess sequences are kept in an ordered backlog
         /// @@       and become candidates when existing candidate sequences
         /// @@       complete.
         /// @@
@@ -1788,6 +1832,29 @@ pub mod model_sequence_batching {
         /// @@
         #[prost(uint64, tag = "3")]
         pub max_queue_delay_microseconds: u64,
+        /// @@    .. cpp:var:: bool preserve_ordering
+        /// @@
+        /// @@       Should the dynamic batcher preserve the ordering of responses to
+        /// @@       match the order of requests received by the scheduler. Default is
+        /// @@       false. If true, the responses will be returned in the same order
+        /// @@       as the order of requests sent to the scheduler. If false, the
+        /// @@       responses may be returned in arbitrary order. This option is
+        /// @@       specifically needed when a sequence of related inference requests
+        /// @@       (i.e. inference requests with the same correlation ID) are sent
+        /// @@       to the dynamic batcher to ensure that the sequence responses are
+        /// @@       in the correct order.
+        /// @@
+        /// @@       When using decoupled models, setting this to true may block the
+        /// @@       responses from independent sequences from being returned to the
+        /// @@       client until the previous request completes, hurting overall
+        /// @@       performance. If using GRPC streaming protocol, the stream
+        /// @@       ordering guarantee may be sufficient alone to ensure the
+        /// @@       responses for each sequence are returned in sequence-order
+        /// @@       without blocking based on independent requests, depending on the
+        /// @@       use case.
+        /// @@
+        #[prost(bool, tag = "4")]
+        pub preserve_ordering: bool,
     }
     /// @@  .. cpp:var:: oneof strategy_choice
     /// @@
@@ -1877,6 +1944,13 @@ pub mod model_ensembling {
             ::prost::alloc::string::String,
             ::prost::alloc::string::String,
         >,
+        /// @@  .. cpp:var:: string model_namespace
+        /// @@
+        /// @@     \[RESERVED\] currently this field is reserved for internal use, users
+        /// @@     must not set any value to this field to avoid unexpected behavior.
+        /// @@
+        #[prost(string, tag = "5")]
+        pub model_namespace: ::prost::alloc::string::String,
     }
 }
 /// @@
@@ -2065,7 +2139,7 @@ pub struct ModelRepositoryAgents {
     /// @@  .. cpp:var:: Agent agents (repeated)
     /// @@
     /// @@     The ordered list of agents for the model. These agents will be
-    /// @@     invoked in order to respond to repository actions occuring for the
+    /// @@     invoked in order to respond to repository actions occurring for the
     /// @@     model.
     /// @@
     #[prost(message, repeated, tag = "1")]
@@ -2135,10 +2209,9 @@ pub struct ModelConfig {
     pub name: ::prost::alloc::string::String,
     /// @@  .. cpp:var:: string platform
     /// @@
-    /// @@     The framework for the model. Possible values are
-    /// @@     "tensorrt_plan", "tensorflow_graphdef",
-    /// @@     "tensorflow_savedmodel", "onnxruntime_onnx",
-    /// @@     "pytorch_libtorch".
+    /// @@     Additional backend-specific configuration for the model.
+    /// @@     Please refer to the backend documentation on whether this field
+    /// @@     should be specified.
     /// @@
     #[prost(string, tag = "2")]
     pub platform: ::prost::alloc::string::String,
@@ -2148,6 +2221,12 @@ pub struct ModelConfig {
     /// @@
     #[prost(string, tag = "17")]
     pub backend: ::prost::alloc::string::String,
+    /// @@  .. cpp:var:: string runtime
+    /// @@
+    /// @@     The name of the backend library file used by the model.
+    /// @@
+    #[prost(string, tag = "25")]
+    pub runtime: ::prost::alloc::string::String,
     /// @@  .. cpp:var:: ModelVersionPolicy version_policy
     /// @@
     /// @@     Policy indicating which version(s) of the model will be served.
@@ -2667,18 +2746,26 @@ pub mod model_metadata_response {
 pub struct InferParameter {
     /// @@  .. cpp:var:: oneof parameter_choice
     /// @@
-    /// @@     The parameter value can be a string, an int64 or
-    /// @@     a boolean
+    /// @@     The parameter value can be a string, an int64,
+    /// @@     an uint64, a double, or a boolean
     /// @@
-    #[prost(oneof = "infer_parameter::ParameterChoice", tags = "1, 2, 3")]
+    /// @@     Note: double and uint64 are currently
+    /// @@           placeholders for future use and
+    /// @@           are not supported for custom parameters
+    /// @@
+    #[prost(oneof = "infer_parameter::ParameterChoice", tags = "1, 2, 3, 4, 5")]
     pub parameter_choice: ::core::option::Option<infer_parameter::ParameterChoice>,
 }
 /// Nested message and enum types in `InferParameter`.
 pub mod infer_parameter {
     /// @@  .. cpp:var:: oneof parameter_choice
     /// @@
-    /// @@     The parameter value can be a string, an int64 or
-    /// @@     a boolean
+    /// @@     The parameter value can be a string, an int64,
+    /// @@     an uint64, a double, or a boolean
+    /// @@
+    /// @@     Note: double and uint64 are currently
+    /// @@           placeholders for future use and
+    /// @@           are not supported for custom parameters
     /// @@
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
@@ -2701,6 +2788,20 @@ pub mod infer_parameter {
         /// @@
         #[prost(string, tag = "3")]
         StringParam(::prost::alloc::string::String),
+        /// @@    .. cpp:var:: double double_param
+        /// @@
+        /// @@       A double parameter value.
+        /// @@
+        #[prost(double, tag = "4")]
+        DoubleParam(f64),
+        /// @@    .. cpp:var:: uint64 uint64_param
+        /// @@
+        /// @@       A uint64 parameter value.
+        /// @@
+        /// @@       Not supported for custom parameters
+        /// @@
+        #[prost(uint64, tag = "5")]
+        Uint64Param(u64),
     }
 }
 /// @@
@@ -3245,24 +3346,74 @@ pub struct InferStatistics {
     /// @@     model version, model inputs) hashes to an existing entry in the
     /// @@     cache. On a cache miss, the request hash and response output tensor
     /// @@     data is added to the cache. See response cache docs for more info:
-    /// @@     <https://github.com/triton-inference-server/server/blob/main/docs/response_cache.md>
+    /// @@
+    /// <https://github.com/triton-inference-server/server/blob/main/docs/response_cache.md>
     /// @@
     #[prost(message, optional, tag = "7")]
     pub cache_hit: ::core::option::Option<StatisticDuration>,
     /// @@  .. cpp:var:: StatisticDuration cache_miss
     /// @@
     /// @@     The count of response cache misses and cumulative duration to lookup
-    /// @@     and insert output tensor data from the computed response to the cache.
+    /// @@     and insert output tensor data from the computed response to the
+    /// cache.
     /// @@     For example, this duration should include the time to copy
     /// @@     output tensor data from the response object to the Response Cache.
     /// @@     Assuming the response cache is enabled for a given model, a cache
     /// @@     miss occurs for a request to that model when the request metadata
     /// @@     does NOT hash to an existing entry in the cache. See the response
     /// @@     cache docs for more info:
-    /// @@     <https://github.com/triton-inference-server/server/blob/main/docs/response_cache.md>
+    /// @@
+    /// <https://github.com/triton-inference-server/server/blob/main/docs/response_cache.md>
     /// @@
     #[prost(message, optional, tag = "8")]
     pub cache_miss: ::core::option::Option<StatisticDuration>,
+}
+/// @@
+/// @@.. cpp:var:: message InferResponseStatistics
+/// @@
+/// @@   Statistics per response.
+/// @@
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InferResponseStatistics {
+    /// @@  .. cpp:var:: StatisticDuration compute_infer
+    /// @@
+    /// @@     The count and cumulative duration to compute a response.
+    /// @@
+    #[prost(message, optional, tag = "1")]
+    pub compute_infer: ::core::option::Option<StatisticDuration>,
+    /// @@  .. cpp:var:: StatisticDuration compute_output
+    /// @@
+    /// @@     The count and cumulative duration to extract the output tensors of a
+    /// @@     response.
+    /// @@
+    #[prost(message, optional, tag = "2")]
+    pub compute_output: ::core::option::Option<StatisticDuration>,
+    /// @@  .. cpp:var:: StatisticDuration success
+    /// @@
+    /// @@     The count and cumulative duration for successful responses.
+    /// @@
+    #[prost(message, optional, tag = "3")]
+    pub success: ::core::option::Option<StatisticDuration>,
+    /// @@  .. cpp:var:: StatisticDuration fail
+    /// @@
+    /// @@     The count and cumulative duration for failed responses.
+    /// @@
+    #[prost(message, optional, tag = "4")]
+    pub fail: ::core::option::Option<StatisticDuration>,
+    /// @@  .. cpp:var:: StatisticDuration empty_response
+    /// @@
+    /// @@     The count and cumulative duration for empty responses.
+    /// @@
+    #[prost(message, optional, tag = "5")]
+    pub empty_response: ::core::option::Option<StatisticDuration>,
+    /// @@  .. cpp:var:: StatisticDuration cancel
+    /// @@
+    /// @@     The count and cumulative duration, for cleaning up resources held by
+    /// @@     a cancelled request, for cancelled responses.
+    /// @@
+    #[prost(message, optional, tag = "6")]
+    pub cancel: ::core::option::Option<StatisticDuration>,
 }
 /// @@
 /// @@.. cpp:var:: message InferBatchStatistics
@@ -3303,6 +3454,34 @@ pub struct InferBatchStatistics {
     /// @@
     #[prost(message, optional, tag = "4")]
     pub compute_output: ::core::option::Option<StatisticDuration>,
+}
+/// @@
+/// @@.. cpp:var:: message MemoryUsage
+/// @@
+/// @@   Memory usage.
+/// @@
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MemoryUsage {
+    /// @@  .. cpp:var:: string type
+    /// @@
+    /// @@     The type of memory, the value can be "CPU", "CPU_PINNED", "GPU".
+    /// @@
+    #[prost(string, tag = "1")]
+    pub r#type: ::prost::alloc::string::String,
+    /// @@  .. cpp:var:: int64 id
+    /// @@
+    /// @@     The id of the memory, typically used with "type" to identify
+    /// @@     a device that hosts the memory.
+    /// @@
+    #[prost(int64, tag = "2")]
+    pub id: i64,
+    /// @@  .. cpp:var:: uint64 byte_size
+    /// @@
+    /// @@     The byte size of the memory.
+    /// @@
+    #[prost(uint64, tag = "3")]
+    pub byte_size: u64,
 }
 /// @@
 /// @@.. cpp:var:: message ModelStatistics
@@ -3375,6 +3554,31 @@ pub struct ModelStatistics {
     /// @@
     #[prost(message, repeated, tag = "7")]
     pub batch_stats: ::prost::alloc::vec::Vec<InferBatchStatistics>,
+    /// @@  .. cpp:var:: MemoryUsage memory_usage (repeated)
+    /// @@
+    /// @@     The memory usage detected during model loading, which may be used to
+    /// @@     estimate the memory to be released once the model is unloaded. Note
+    /// @@     that the estimation is inferenced by the profiling tools and
+    /// @@     framework's memory schema, therefore it is advised to perform
+    /// @@     experiments to understand the scenario that the reported memory usage
+    /// @@     can be relied on. As a starting point, the GPU memory usage for
+    /// @@     models in ONNX Runtime backend and TensorRT backend is usually
+    /// @@     aligned.
+    /// @@
+    #[prost(message, repeated, tag = "8")]
+    pub memory_usage: ::prost::alloc::vec::Vec<MemoryUsage>,
+    /// @@  .. cpp:var:: map<string, InferResponseStatistics> response_stats
+    /// @@
+    /// @@     The key and value pairs for all responses statistics. The key is a
+    /// @@     string identifying a set of response statistics aggregated together
+    /// @@     (i.e. index of the response sent). The value is the aggregated
+    /// @@     response statistics.
+    /// @@
+    #[prost(map = "string, message", tag = "9")]
+    pub response_stats: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        InferResponseStatistics,
+    >,
 }
 /// @@
 /// @@.. cpp:var:: message ModelStatisticsResponse
