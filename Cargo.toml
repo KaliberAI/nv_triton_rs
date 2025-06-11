@@ -1,31 +1,33 @@
 [package]
-name = "inference"
-version = "0.3.0"
-edition = "2021"
-description = "A crate for managing the machine learning inference process"
+name = "nv_triton_rs"
+version = "0.1.0"
+edition = "2024"
+description = "Rust client for NVIDIA Triton Inference Server"
 readme = "README.md"
-repository = "https://github.com/opensensordotdev/inference"
+repository = "https://github.com/KaliberAI/nv_triton_rs"
 license = "Apache-2.0"
 keywords = ["machine-learning", "ml", "triton"]
 categories = ["api-bindings"]
-exclude = ["config/", "minio/", "sample_models", "docker-compose.yaml", "Makefile"]
+exclude = ["common/"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tonic = "0.8"
-prost = "0.11"
-tokio = {version = "1", features = ["macros", "rt-multi-thread"]}
+tonic = "0.13"
+prost = "0.13"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 thiserror = "1"
 tracing = "0.1"
-# tracing-futures = "0.2" # Not clear if this is actually necessary since tracing is used through the instrument macro
-redpanda = "0.5"
 
 [dev-dependencies]
 tracing-test = "0.2"
 
 [build-dependencies]
-tonic-build = "0.8"
+tonic-build = "0.13"
 
 [lib]
 crate-type = ["lib"]
+
+[[example]]
+name = "load_unload_model"
+path = "examples/load_unload_model.rs"

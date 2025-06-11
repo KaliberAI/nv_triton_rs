@@ -3,26 +3,32 @@
 use std::collections::HashMap;
 
 use tonic::{Request, Status};
-use tracing::{event, instrument, Level};
+use tracing::{Level, event, instrument};
 
+use crate::TritonClient;
 use crate::inference::ModelRepositoryParameter;
 use crate::inference::{RepositoryIndexRequest, RepositoryIndexResponse};
 use crate::inference::{RepositoryModelLoadRequest, RepositoryModelLoadResponse};
 use crate::inference::{RepositoryModelUnloadRequest, RepositoryModelUnloadResponse};
-use crate::TritonClient;
 
 impl TritonClient {
     /// Get the model repository contents
     ///
     /// RPC RepositoryIndex
+    ///
+    /// # Parameters
+    /// - `only_ready`: If true, only models whose status is `ready` are returned.
     #[instrument]
-    pub async fn model_repository_index(&self) -> Result<RepositoryIndexResponse, Status> {
+    pub async fn model_repository_index(
+        &self,
+        only_ready: bool,
+    ) -> Result<RepositoryIndexResponse, Status> {
         // If you provide no repository_name, you get all models registered on the server
         // If you set ready = true, you only get models whose status is `ready`, ie. they're ready
         // for the client to submit inference requests
         let message = RepositoryIndexRequest {
             repository_name: "".to_owned(),
-            ready: true,
+            ready: only_ready,
         };
         let request = Request::new(message);
         match self.client().repository_index(request).await {

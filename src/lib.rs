@@ -22,9 +22,9 @@ use crate::inference::model_infer_request::{InferInputTensor, InferRequestedOutp
 use crate::inference::{InferParameter, ModelInferRequest, ModelInferResponse};
 
 use std::collections::HashMap;
-use tonic::transport::Channel;
 use tonic::Status;
-use tracing::{event, instrument, Level};
+use tonic::transport::Channel;
+use tracing::{Level, event, instrument};
 
 /// A gRPC client for the Triton inference server
 pub struct TritonClient {
