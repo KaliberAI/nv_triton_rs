@@ -27,3 +27,7 @@ tonic-build = "0.13"
 
 [lib]
 crate-type = ["lib"]
+
+[[example]]
+name = "load_unload_model"
+path = "examples/load_unload_model.rs"

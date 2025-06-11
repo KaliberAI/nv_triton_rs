@@ -3,13 +3,13 @@
 use std::collections::HashMap;
 
 use tonic::{Request, Status};
-use tracing::{event, instrument, Level};
+use tracing::{Level, event, instrument};
 
+use crate::TritonClient;
 use crate::inference::ModelRepositoryParameter;
 use crate::inference::{RepositoryIndexRequest, RepositoryIndexResponse};
 use crate::inference::{RepositoryModelLoadRequest, RepositoryModelLoadResponse};
 use crate::inference::{RepositoryModelUnloadRequest, RepositoryModelUnloadResponse};
-use crate::TritonClient;
 
 impl TritonClient {
     /// Get the model repository contents
