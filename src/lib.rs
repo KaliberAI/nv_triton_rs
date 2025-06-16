@@ -165,11 +165,4 @@ impl TritonClient {
 
         Ok(response)
     }
-
-    /// Get all the models on the Triton gRPC server
-    ///
-    /// TODO: implement me! Probably use the model_repository_index method on a TritonClient
-    pub async fn model_names(&self) -> Vec<String> {
-        unimplemented!();
-    }
 }
