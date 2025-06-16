@@ -16,6 +16,7 @@ exclude = ["common/"]
 tonic = "0.13"
 prost = "0.13"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio-stream = "0.1"
 thiserror = "1"
 tracing = "0.1"
 

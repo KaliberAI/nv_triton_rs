@@ -19,11 +19,14 @@ use std::fmt::Debug;
 
 use crate::inference::grpc_inference_service_client::GrpcInferenceServiceClient;
 use crate::inference::model_infer_request::{InferInputTensor, InferRequestedOutputTensor};
-use crate::inference::{InferParameter, ModelInferRequest, ModelInferResponse};
+use crate::inference::{
+    InferParameter, ModelInferRequest, ModelInferResponse, ModelStreamInferResponse,
+};
 
 use std::collections::HashMap;
-use tonic::Status;
+use tokio_stream::Stream;
 use tonic::transport::Channel;
+use tonic::{Status, Streaming};
 use tracing::{Level, event, instrument};
 
 /// A gRPC client for the Triton inference server
@@ -160,6 +163,29 @@ impl TritonClient {
         let response = self
             .client()
             .model_infer(inference_request)
+            .await?
+            .into_inner();
+
+        Ok(response)
+    }
+
+    /// Submit a streaming ModelInferRequest to the server
+    ///
+    /// Note: it is not currently enforced whether the ModelInferRequest came from a model that's
+    /// associated with this server, so it is possible for this request to fail for a number of
+    /// reasons, including:
+    /// - Model doesn't exist
+    /// - The input isn't correctly formed
+    ///
+    /// RPC ModelInfer
+    #[instrument(skip(inference_request))]
+    pub async fn submit_streaming_inference_request(
+        &self,
+        inference_request: impl Stream<Item = ModelInferRequest> + Send + 'static,
+    ) -> Result<Streaming<ModelStreamInferResponse>, Status> {
+        let response = self
+            .client()
+            .model_stream_infer(inference_request)
             .await?
             .into_inner();
 
